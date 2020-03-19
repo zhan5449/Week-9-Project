@@ -1,0 +1,42 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# R Studio API
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(rstudioapi)
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+# Libraries
+```{r}
+library(tidyverse)
+library(lubridate)
+```
+
+# Data Import
+```{r}
+week9_tbl <- read_csv("../data/week3.csv") %>%
+  mutate(timeStart=ymd_hms(timeStart),
+         timeEnd=ymd_hms(timeEnd),
+         gender=factor(gender,levels=c("M","F"),labels=c("Male","Female")),
+         condition=factor(condition,levels=c("A","B","C"),labels=c("Block A","Block B","Control")),
+         Q1_Q5=rowMeans(select(.,q1:q5),na.rm=TRUE),
+         Q6_Q10=rowMeans(select(.,q6:q10),na.rm=TRUE)) 
+saveRDS(week9_tbl,"../shiny/week9_shiny/data.rds") # prepare R object for shiny app
+```
+
+# Visualization
+```{r}
+ggplot(week9_tbl,aes(x=Q1_Q5,y=Q6_Q10))+
+  geom_point()+
+  geom_smooth(method="lm",se=F)
+```
+
+# Analysis
+```{r}
+corr <- cor.test(week9_tbl$Q1_Q5,week9_tbl$Q6_Q10)$estimate 
+p <- cor.test(week9_tbl$Q1_Q5,week9_tbl$Q6_Q10)$`p.value` 
+```

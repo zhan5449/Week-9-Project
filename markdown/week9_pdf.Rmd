@@ -1,0 +1,56 @@
+---
+title: "week9"
+author: "Charlene Zhang"
+date: "3/14/2020"
+output: pdf_document
+params:
+    output_dir: "../output"
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../output") })
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+setwd("/Users/zhan5449/Google Drive/Data Science/Week 9/Week-9-Project")
+```
+
+# Libraries
+```{r,include=FALSE}
+library(tidyverse)
+library(lubridate)
+```
+
+# Data Import
+  + Read in Data from Week3 as a Tibble
+  + Converted timeStart and timeEnd to POSIX variables
+  + Converted gender and condition to factor variables
+  + Created mean scores of Q1 to Q5 and means scores for Q6 to Q10 for subsequent visualization and analysis
+```{r}
+week9_tbl <- read_csv("../data/week3.csv") %>%
+  mutate(timeStart=ymd_hms(timeStart),
+         timeEnd=ymd_hms(timeEnd),
+         gender=factor(gender,levels=c("M","F"),labels=c("Male","Female")),
+         condition=factor(condition,levels=c("A","B","C"),labels=c("Block A","Block B","Control")),
+         Q1_Q5=rowMeans(select(.,q1:q5),na.rm=TRUE),
+         Q6_Q10=rowMeans(select(.,q6:q10),na.rm=TRUE)) 
+```
+
+# Visualization
+```{r,echo=FALSE}
+ggplot(week9_tbl,aes(x=Q1_Q5,y=Q6_Q10))+
+  geom_point()+
+  geom_smooth(method="lm",se=F)+
+  labs(x="Mean scores of Q1 to Q5",
+       y="Mean scores of Q6 to Q10",
+       title="Scatterplot between the Q1-Q5 mean and the Q6-Q10 mean")
+```
+
+This is a scatterplot that shows the relationshiip between mean scores of Q1-Q5 and mean scores of Q6-Q10, with an OLS regression line. 
+
+# Analysis
+```{r}
+corr <- cor.test(week9_tbl$Q1_Q5,week9_tbl$Q6_Q10)$estimate 
+p <- cor.test(week9_tbl$Q1_Q5,week9_tbl$Q6_Q10)$`p.value` 
+```
+
+The correlation was `r corr` (p = `r p`), which is not statistically significant. 
